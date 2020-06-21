@@ -32,6 +32,8 @@ parser = argparse.ArgumentParser(description='Colorize GreyScale Image')
 parser.add_argument('--input', help='Path to image.')
 parser.add_argument('--offset', help='image name offset.')
 parser.add_argument('--output', help='image name output.')
+parser.add_argument('--Win', help='w_IN')
+parser.add_argument('--Hin', help='h_IN Larger is larger processing time')
 args = parser.parse_args()
 
 print("ARGS: " + str(args))
@@ -58,7 +60,7 @@ weightsFile = "./models/colorization_release_v2.caffemodel"
 #weightsFile = "./models/colorization_release_v2_norebal.caffemodel"
 
 # Load the cluster centers
-pts_in_hull = np.load('./pts_in_hull.npy')
+pts_in_hull = np.load('models/pts_in_hull.npy')
 
 # Read the network into Memory
 net = cv.dnn.readNetFromCaffe(protoFile, weightsFile)
@@ -69,8 +71,10 @@ net.getLayer(net.getLayerId('class8_ab')).blobs = [pts_in_hull.astype(np.float32
 net.getLayer(net.getLayerId('conv8_313_rh')).blobs = [np.full([1, 313], 2.606, np.float32)]
 
 #from opencv sample
-W_in = 224
-H_in = 224
+if args.Win is None: W_in = 244
+else: W_in = int(args.Win)
+if args.Hin is None: H_in = 244
+else: H_in = int(args.Hin)
 
 img_rgb = (frame[:,:,[2, 1, 0]] * 1.0 / 255).astype(np.float32)
 img_lab = cv.cvtColor(img_rgb, cv.COLOR_RGB2Lab)
