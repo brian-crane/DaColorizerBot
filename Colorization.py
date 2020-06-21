@@ -39,7 +39,7 @@ args = parser.parse_args()
 print("ARGS: " + str(args))
 if os.path.isfile('outputColor/'+args.input[:-4].lstrip('output/')+'jpg') :
     print('s', end='')
-    os.remove(args.input)
+    #os.remove(args.input)
     exit()
 
 if args.input==None:
