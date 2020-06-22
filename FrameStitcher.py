@@ -1,5 +1,6 @@
 import cv2
 import os
+from moviepy.editor import *
 
 #From a folder of images we can create a video
 
@@ -22,6 +23,9 @@ for image in images:
 
 cv2.destroyAllWindows()
 video.release()
+
+clip = (VideoFileClip("out.avi"))
+clip.write_gif("out.gif")
 
 print("DONE!")
 

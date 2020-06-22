@@ -1,8 +1,9 @@
 import requests
 
 def getDeepMindImg(imgUrl):
+    r = None
     r = requests.post(
-        "https://api.deepai.org/api/colorizer",
+        "https://api.deepai.org/api/waifu2x",
         data={
             'image': imgUrl,
         },
@@ -12,3 +13,4 @@ def getDeepMindImg(imgUrl):
     out = out[out.index("https://"):len(out)-5]
     #(str(r.content))
     return out
+

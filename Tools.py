@@ -2,6 +2,7 @@ import math
 import os
 import re
 
+import cv2
 from PIL.Image import Image
 
 def slugify(str):
@@ -28,13 +29,19 @@ def is_grey_scale(img):
       if r != g != b: return False
   return True
 
-def mergeImages(img1, img2):
+def mergeImages(img1, img2, w1, w2):
   img1 = img1.convert('RGB')
   img2 = img2.convert('RGB')
   img3 = img1
   w,h = img1.size
   for i in range(w):
     for j in range(h):
-      r,g,b = img1.getpixel((i,j))
+      r1,g1,b1 = img1.getpixel((i,j))
       r2,g2,b2 = img2.getpixel((i,j))
-      img3.putpixel((i,j), (((r+r2)/2),((g+g2)/2),((b+b2)/2)))
+      newR = int(((r1*w1+r2*w2)/100))
+      newG = int(((g1*w1+g2*w2)/100))
+      newB = int(((b1*w1+b2*w2)/100))
+      img3.putpixel((i,j), (newR,newG,newB, 255))
+  return img3
+
+

@@ -2,7 +2,7 @@ import requests
 
 def getDeepMindImg(imgUrl):
     r = requests.post(
-        "https://api.deepai.org/api/colorizer",
+        "https://api.deepai.org/api/deepdream",
         data={
             'image': imgUrl,
         },
