@@ -3,9 +3,26 @@ import os
 import random
 import re
 
+import PIL
 import cv2
+import numpy
+import numpy as np
 from PIL.Image import Image
 
+def writeToFile(filename, str):
+    with open(filename, 'a') as file:
+        file.write(str)
+    file.close
+
+def fileToStr(filename):
+    file = open(filename, "r")
+    data = file.read()
+    file.close()
+    return data
+
+def isBlackListed(bL, str):
+    if bL.find(str) != -1: return True
+    return False
 
 def slugify(str):
     str = str.replace(" ", "")
@@ -24,24 +41,31 @@ def convertToJpeg(img):
     rgb_im.save('colors.jpg')
     os.remove(img)
 
+def isGreyScale2(img):
+    data = numpy.asarray(img)
+    pixels = list(img.getdata())
+    width, height = img.size
+    pixels = [pixels[i * width:(i + 1) * width] for i in range(height)]
 
-def is_grey_scale(img):
-    limit = 4
+
+def isGreyScale(img):
+    limit = 3
     size = img.size[0] * img.size[1]
     good = size
     img = img.convert('RGB')
     w, h = img.size
     progress = 0
+    #data = numpy.asarray(img)
     for i in range(w):
         if i % (w / 10) == 0:
             print("*"+str(progress),end='')
             progress += 1
         for j in range(h):
             r, g, b = img.getpixel((i, j))
-
+            #r, g, b = data[j][i]
             if abs(r - g) > limit and abs(g - b) > limit and abs(r - b) > limit:
                 good -= 1
-                if good < size * 0.95:
+                if good < size * 0.98:
                     return False
     return True
 
@@ -49,9 +73,10 @@ def is_grey_scale(img):
 def mergeImages(img1, img2, w1, w2):
     img1 = img1.convert('RGB')
     img2 = img2.convert('RGB')
-    img3 = img1
     w, h = img1.size
+    img3 = PIL.Image.new(mode = "RGB", size = (w, h))
     for i in range(w):
+        if i % 100 == 0: print(".",end='')
         for j in range(h):
             r1, g1, b1 = img1.getpixel((i, j))
             r2, g2, b2 = img2.getpixel((i, j))
