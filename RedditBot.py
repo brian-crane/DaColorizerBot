@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+import builtins as __builtin__
 import random
 import time
 import traceback
@@ -21,6 +24,20 @@ import DeepAiWaifu
 import Tools
 
 import winsound
+import smtplib
+
+
+
+def sendEmail(subject, body):
+    smtpobj = smtplib.SMTP('smtp.gmail.com', 587)
+    smtpobj.starttls()
+    senderemail_id_password="Yahoo123!"
+    senderemail_id="DaColorizerBot@gmail.com"
+    receiveremail_id="DaColorizerBot@gmail.com"
+    smtpobj.login(senderemail_id, senderemail_id_password)
+
+    smtpobj.sendmail(senderemail_id,receiveremail_id, "Subject: "+subject+"\n\n" + body)
+    print("Sent email with subject: " + subject)
 
 picassoUrl = "https://2.bp.blogspot.com/-GT-giB-5fos/UYNL_2WNHDI/AAAAAAAAB1I/y-tvmLnf3YU/s1600/La+Muse+by+Pablo+Picasso+OSA283.jpg"
 dutchGoldUrl = "https://readtiger.com/img/wkp/en/Frans_Hals,_De_magere_compagnie.jpg"
@@ -79,7 +96,7 @@ for sub in subList:
                 # If file does not exist, it is new content and we can post it!!!
                 urllib.request.urlretrieve(submission.url, 'temp.jpeg')
                 # Save image to a temp file, then colorize
-                basewidth = 120
+                basewidth = 1400
                 img = Image.open('temp.jpeg')
 
                 print("Dimensions: " + str(img.size[0]) + "x" + str(img.size[1]))
@@ -107,7 +124,8 @@ for sub in subList:
 
                 mySubreddit = reddit.subreddit("DaColorizerBot")
                 myAltSubreddit = reddit.subreddit("DaColorizerBot2")
-                submission = myAltSubreddit.submit_image("resized", "temp.jpeg")
+
+                #submission = myAltSubreddit.submit_image("resized", "temp.jpeg")
 
                 print("Getting DeepAI Colored Image")
                 deepMindColorImg = DeepAiColorize.getDeepMindImg(submission.url)
@@ -174,14 +192,14 @@ for sub in subList:
 
                 dmImg = Image.open(origImgFilename)
                 dwImg = Image.open(dwImgFilename)
-                print("Merging these 2 images together! dim: " + str(img.size))
-                for i in range(0, 10):
-                    print(str((10 - i) * 10) + ":" + str(i * 10))
-                    merged = Tools.mergeImages(dmImg, dwImg, (10 - i) * 10, i * 10)
-                    prefix = ""
-                    if(i<10): prefix = "00"
-                    merged.save(filename.replace(".jp", "MERGED" + prefix + str(i) + ".jp").replace("images/out", "animations/temp"))
-                    merged.save(filename.replace(".jp", "MERGED" + prefix + str(40-i) + ".jp").replace("images/out", "animations/temp"))
+                print("Merging these 2 images together! dim: " + str(dmImg.size) +" and " + str(dwImg.size))
+                for i in range(0, 21):
+                    print(str((20 - i) * 5) + ":" + str(i * 5))
+                    merged = Tools.mergeImages(dmImg, dwImg, (20 - i) * 5, i * 5)
+                    if i<10: prefix = "00"
+                    else: prefix = "0"
+                    merged.save(filename.replace(".jp", "MERGED"+prefix + str(i) + ".jp").replace("images/out", "animations/temp"))
+                    merged.save(filename.replace(".jp", "MERGED0" + str(80-i) + ".jp").replace("images/out", "animations/temp"))
                 print("Merging these 2 images together! dim: " + str(img.size))
                 #reformat picasso
                 print("Reformatting Picasso image")
@@ -191,21 +209,28 @@ for sub in subList:
 
                 dmImg = Image.open(dwImgFilename)
                 dwImg = Image.open(filename.replace(".jp", "DD2picasso.jp"))
-                for i in range(0, 10):
-                    print(str((10 - i) * 10) + ":" + str(i * 10))
-                    merged = Tools.mergeImages(dmImg, dwImg, (10 - i) * 10, i * 10)
-                    prefix = ""
-                    merged.save(filename.replace(".jp", "MERGED"+ prefix + str(i + 10) + ".jp").replace("images/out", "animations/temp"))
-                    merged.save(filename.replace(".jp", "MERGED"+ prefix + str(30 - i) + ".jp").replace("images/out", "animations/temp"))
+                print("Merging these 2 images together! dim: " + str(dmImg.size) +" and " + str(dwImg.size))
+                for i in range(0, 19):
+                    print(str((20 - i) * 5) + ":" + str(i * 5))
+                    merged = Tools.mergeImages(dmImg, dwImg, (20 - i) * 5, i * 20)
+                    merged.save(filename.replace(".jp", "MERGED0" + str(i + 20) + ".jp").replace("images/out", "animations/temp"))
+                    merged.save(filename.replace(".jp", "MERGED0" + str(60 - i) + ".jp").replace("images/out", "animations/temp"))
 
                 print("Creating GIF and Posting to reddit")
                 cmd = "python FrameStitcher.py"
                 os.system(cmd)
                 # out.gif is ready to use
-                os.rename("out.gif", "animations/" + filename.replace(".jpg", ".gif"))
-                myAltSubmission = mySubreddit.submit_image(
-                    ("Transition Image: \"" + submission.title + "\"")[0:280],
-                    ddImgFilename.replace("DD", "DDpicasso"))
+                os.rename("out.gif", filename.replace(".jpg", ".gif").replace("images/","animations/"))
+                try:
+                    myAltSubmission = mySubreddit.submit_image(
+                    ("Transition Animation: \"" + submission.title + "\"")[0:280],
+                    filename.replace(".jpg", ".gif").replace("images/","animations/"))
+                except:
+                    print("EXCEPTION!!! trying 1 more time")
+                    time.sleep(30)
+                    myAltSubmission = mySubreddit.submit_image(
+                        ("Transition Animated GIF: \"" + submission.title + "\"")[0:280],
+                        filename.replace(".jpg", ".gif").replace("images/","animations/"))
                 comment = "It took " + str(time.time() - start)[0:4] + " seconds to create this " + str(
                     dmImg.size[0]) + "x" + str(dmImg.size[1]) + " image using [Deep Learning](https://cv-tricks.com/opencv/deep-learning-image-colorization/)!\n\n[Original Image](" + submission.url + ")\n\n*[Source - " + submission.subreddit_name_prefixed + "](" + submission.shortlink + ")*"
                 myAltSubmission.reply(comment)
@@ -232,7 +257,7 @@ for sub in subList:
                 redirectComment = "I think this is a great photo of " + caption + " - I'm a Deep Learning bot and I colorized this image in " + str(
                     time.time() - start)[0:4] + " seconds." \
                                   + "\n\n**[Colorized Image](" + mySubmission.url + ")**" + \
-                                  "\n\n[Animated Picasso Gif](" + myAltSubmission.url + ")" + \
+                                  "\n\n[Animated GIF of Transition](" + myAltSubmission.url + ")" + \
                                   "\n\n------\n\n[Picasso Style](" + picassoImgUrl + ")" + \
                                   "\n\n[Dutch Golden Age Style](" + dutchImgUrl + ")" + \
                                   "\n\n[Mona Lisa Style](" + monaImgUrl + ")" + \
@@ -274,17 +299,18 @@ for sub in subList:
 
                 # upvote original submission
                 submission.upvote()
-
+                #sendEmail("IMAGE SUCCESS!! Image posted to " + submission.subreddit_name_prefixed,"Took us: " + str((time.time() - start)[0:4] + " seconds!\n"+comment))
                 # wait for reddit timer to refresh
-                print("Sleeping for 30 seconds - you completed one FULL POST cycle")
-                winsound.Beep(400, 50)
-                time.sleep(60)
+                print("Sleeping for 90 seconds - you completed one FULL POST cycle")
+                time.sleep(90)
             else:
                 print("We alredy proceseed " + filename + "......")
                 time.sleep(0.3)
         except Exception as e:
             winsound.Beep(1000, 100)
+            sendEmail("ERROR WHEN PROCESSING A IMAGE: " + str(e), "\n"+traceback.format_exc())
             print("\n\n*********\n\n\n\nERROR!!!!! PROCESSING THIS!!" + str(
                 e) + "\n" + traceback.format_exc() + "\n\n\n\n")
+
 
 print("COMPLETED!")

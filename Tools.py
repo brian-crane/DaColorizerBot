@@ -7,7 +7,7 @@ import PIL
 import cv2
 import numpy
 import numpy as np
-from PIL.Image import Image
+from PIL import Image
 
 def writeToFile(filename, str):
     with open(filename, 'a') as file:
@@ -82,17 +82,32 @@ def isGreyScale(img):
 
 
 def mergeImages(img1, img2, w1, w2):
+    #Resize
+    height = 2
+    if img1.size[1] > img2.size[1]:
+        height = img1.size[1]
+        wpercent = (height/float(img2.size[1]))
+        width = int(img2.size[0]*float(wpercent))
+        img2 = img2.resize((width, height), Image.ANTIALIAS)
+    elif img1.size[1] < img2.size[1]:
+        height = img2.size[1]
+        wpercent = (height/float(img1.size[1]))
+        width = int(img1.size[0]*float(wpercent))
+        img1 = img1.resize((width, height), Image.ANTIALIAS)
     img1 = img1.convert('RGB')
     img2 = img2.convert('RGB')
     w, h = img1.size
     img3 = PIL.Image.new(mode = "RGB", size = (w, h))
     for i in range(w):
-        if i % 100 == 0: print(".",end='')
-        for j in range(h):
-            r1, g1, b1 = img1.getpixel((i, j))
-            r2, g2, b2 = img2.getpixel((i, j))
-            newR = int(((r1 * w1 + r2 * w2) / 100))
-            newG = int(((g1 * w1 + g2 * w2) / 100))
-            newB = int(((b1 * w1 + b2 * w2) / 100))
-            img3.putpixel((i, j), (newR, newG, newB, 255))
+        try:
+            if i % 100 == 0: print(".",end='')
+            for j in range(h):
+                r1, g1, b1 = img1.getpixel((i, j))
+                r2, g2, b2 = img2.getpixel((i, j))
+                newR = int(((r1 * w1 + r2 * w2) / 100))
+                newG = int(((g1 * w1 + g2 * w2) / 100))
+                newB = int(((b1 * w1 + b2 * w2) / 100))
+                img3.putpixel((i, j), (newR, newG, newB, 255))
+        except Exception as e:
+            print("OOPS -error- " + str(e))
     return img3
