@@ -41,7 +41,7 @@ jonImgUrl = ""
 reddit = praw.Reddit('bot1')
 
 subList = [
-    "HappyTrees", "lastimages", "history", "drawing", "art"
+    "HappyTrees", "lastimages", "history"
     , "thalassophobia", "FoggyPics", "natureporn", "imsorryjon", "wwi", "WorldWar2"
     , "otr", "pics", "blackandwhite"
     , "trippinthroughtime"
@@ -55,7 +55,7 @@ for sub in subList:
     # for submission in subreddit.hot():
     # for submission in subreddit.top("week"):
     # for submission in subreddit.new(limit=10):
-    for submission in subreddit.top("hour"):
+    for submission in subreddit.top("month"):
         try:
             print("Title: ", submission.title)
             print("Comment Url: ", " https://reddit.com" + submission.permalink)
@@ -68,7 +68,7 @@ for sub in subList:
                 print("Issue with this post. skipping")
                 continue
             # Check if this item is in blacklist
-            if Tools.isBlackListed(Tools.fileToStr("blackList.txt"), submission.permalink):
+            if Tools.isBlackListed(Tools.fileToStr("blackList.txt"), Tools.slugifyNoLimit(submission.permalink)):
                 print("SKIP THIS BECAUSE ITS IN BLACK LIST!!!")
                 continue
             print("Photo is not blacklisted")
@@ -79,7 +79,7 @@ for sub in subList:
                 # If file does not exist, it is new content and we can post it!!!
                 urllib.request.urlretrieve(submission.url, 'temp.jpeg')
                 # Save image to a temp file, then colorize
-                basewidth = 1200
+                basewidth = 120
                 img = Image.open('temp.jpeg')
 
                 print("Dimensions: " + str(img.size[0]) + "x" + str(img.size[1]))
@@ -96,7 +96,7 @@ for sub in subList:
                 if not isBlackAndWhite:
                     print("Because Photo is NOT BLACK AND WHITE we are SKIPPING it")
                     # write to blackList to skip later
-                    Tools.writeToFile("blackList.txt", "\nhttps://reddit.com/" + submission.permalink)
+                    Tools.writeToFile("blackList.txt", Tools.slugifyNoLimit(submission.permalink)+"\n")
                     continue
                 img.save(filename.replace("out", "in"))
 
@@ -104,6 +104,10 @@ for sub in subList:
                 cmd = "python Colorization.py --Win 224 --Hin 224 --input temp.jpeg --output " + filename
                 start = time.time()
                 os.system(cmd)
+
+                mySubreddit = reddit.subreddit("DaColorizerBot")
+                myAltSubreddit = reddit.subreddit("DaColorizerBot2")
+                submission = myAltSubreddit.submit_image("resized", "temp.jpeg")
 
                 print("Getting DeepAI Colored Image")
                 deepMindColorImg = DeepAiColorize.getDeepMindImg(submission.url)
@@ -126,9 +130,9 @@ for sub in subList:
                 urllib.request.urlretrieve(origImg, origImgFilename)
 
                 dwImg = Image.open(dwImgFilename)
-                mySubreddit = reddit.subreddit("DaColorizerBot")
-                myAltSubreddit = reddit.subreddit("DaColorizerBot2")
+
                 fastStyleTransferImg = deepMindWaifuImg
+                favoredUrl = ""
                 for art in artList:
 
                     print("Getting DeepAI Fast Style Transfer Image")
@@ -137,12 +141,12 @@ for sub in subList:
 
                     # ddImg = Image.open(filename.replace(".jp","DD.jp"))
                     dwImgFilename = filename.replace(".jp", "DW.jp")
-
                     fastStyleTransferImg = DeepAiWaifu.getDeepMindImg(fastStyleTransferImg)
                     print(fastStyleTransferImg)
 
                     if "Picasso" in art:
                         urllib.request.urlretrieve(fastStyleTransferImg, ddImgFilename.replace("DD", "DDpicasso"))
+                        favoredUrl = fastStyleTransferImg
                         myAltSubmission = myAltSubreddit.submit_image(
                             ("In the Style of Picasso: \"" + submission.title + "\"")[0:280],
                             ddImgFilename.replace("DD", "DDpicasso"))
@@ -162,29 +166,49 @@ for sub in subList:
                     elif "hnc6t" in art:  # imSorryJohn
                         urllib.request.urlretrieve(fastStyleTransferImg, ddImgFilename.replace("DD", "DDjon"))
                         myAltSubmission = myAltSubreddit.submit_image((
-                                                                                  "In the Style of the I̸͈̾m̵͈̆S̸̮͋o̸̥͗r̵̯͝r̵̯̉y̴͌͜J̸̫̅o̸͎͆ǹ̴̫: \"" + submission.title + "\"")[
-                                                                      0:280], ddImgFilename.replace("DD", "DDjon"))
+                        "In the Style of the I̸͈̾m̵͈̆S̸̮͋o̸̥͗r̵̯͝r̵̯̉y̴͌͜J̸̫̅o̸͎͆ǹ̴̫: \"" + submission.title + "\"")[0:280], ddImgFilename.replace("DD", "DDjon"))
                         jonImgUrl = myAltSubmission.url
                     comment = "It took " + str(time.time() - start)[0:4] + " seconds to create this " + str(
-                        dmImg.size[0]) + "x" + str(dmImg.size[
-                                                       1]) + " image using [Deep Learning](https://cv-tricks.com/opencv/deep-learning-image-colorization/)!\n\n[Original Image](" + submission.url + ")\n\n*[Source - " + submission.subreddit_name_prefixed + "](" + submission.shortlink + ")*"
+                        dmImg.size[0]) + "x" + str(dmImg.size[1]) + " image using [Deep Learning](https://cv-tricks.com/opencv/deep-learning-image-colorization/)!\n\n[Original Image](" + submission.url + ")\n\n*[Source - " + submission.subreddit_name_prefixed + "](" + submission.shortlink + ")*"
                     myAltSubmission.reply(comment)
 
-                dwImg = Image.open(dwImgFilename)
                 dmImg = Image.open(origImgFilename)
+                dwImg = Image.open(dwImgFilename)
                 print("Merging these 2 images together! dim: " + str(img.size))
                 for i in range(0, 10):
                     print(str((10 - i) * 10) + ":" + str(i * 10))
                     merged = Tools.mergeImages(dmImg, dwImg, (10 - i) * 10, i * 10)
-                    merged.save(
-                        filename.replace(".jp", "MERGED" + str(i) + ".jp").replace("images/out", "animations/temp"))
-
+                    prefix = ""
+                    if(i<10): prefix = "00"
+                    merged.save(filename.replace(".jp", "MERGED" + prefix + str(i) + ".jp").replace("images/out", "animations/temp"))
+                    merged.save(filename.replace(".jp", "MERGED" + prefix + str(40-i) + ".jp").replace("images/out", "animations/temp"))
                 print("Merging these 2 images together! dim: " + str(img.size))
-                dwImg = Image.open(filename.replace(".jp","DDpicasso.jp"))
-                for i in range(0,10):
-                   print(str((10-i)*10) + ":" + str(i*10))
-                   merged = Tools.mergeImages(dmImg,dwImg, (10-i)*10,i*10)
-                   merged.save(filename.replace(".jp", "MERGED"+str(i+10)+".jp").replace("images/out","animations/temp"))
+                #reformat picasso
+                print("Reformatting Picasso image")
+                dmImg = DeepAiWaifu.getDeepMindImg(favoredUrl)
+                print(dmImg)
+                urllib.request.urlretrieve(dmImg, filename.replace(".jp", "DD2picasso.jp"))
+
+                dmImg = Image.open(dwImgFilename)
+                dwImg = Image.open(filename.replace(".jp", "DD2picasso.jp"))
+                for i in range(0, 10):
+                    print(str((10 - i) * 10) + ":" + str(i * 10))
+                    merged = Tools.mergeImages(dmImg, dwImg, (10 - i) * 10, i * 10)
+                    prefix = ""
+                    merged.save(filename.replace(".jp", "MERGED"+ prefix + str(i + 10) + ".jp").replace("images/out", "animations/temp"))
+                    merged.save(filename.replace(".jp", "MERGED"+ prefix + str(30 - i) + ".jp").replace("images/out", "animations/temp"))
+
+                print("Creating GIF and Posting to reddit")
+                cmd = "python FrameStitcher.py"
+                os.system(cmd)
+                # out.gif is ready to use
+                os.rename("out.gif", "animations/" + filename.replace(".jpg", ".gif"))
+                myAltSubmission = mySubreddit.submit_image(
+                    ("Transition Image: \"" + submission.title + "\"")[0:280],
+                    ddImgFilename.replace("DD", "DDpicasso"))
+                comment = "It took " + str(time.time() - start)[0:4] + " seconds to create this " + str(
+                    dmImg.size[0]) + "x" + str(dmImg.size[1]) + " image using [Deep Learning](https://cv-tricks.com/opencv/deep-learning-image-colorization/)!\n\n[Original Image](" + submission.url + ")\n\n*[Source - " + submission.subreddit_name_prefixed + "](" + submission.shortlink + ")*"
+                myAltSubmission.reply(comment)
 
                 print("Getting CAPTION for this image! - ", end='')
                 caption = DeepAiNeuralTalk.getDeepMindImg(deepMindWaifuImg)
@@ -208,6 +232,7 @@ for sub in subList:
                 redirectComment = "I think this is a great photo of " + caption + " - I'm a Deep Learning bot and I colorized this image in " + str(
                     time.time() - start)[0:4] + " seconds." \
                                   + "\n\n**[Colorized Image](" + mySubmission.url + ")**" + \
+                                  "\n\n[Animated Picasso Gif](" + myAltSubmission.url + ")" + \
                                   "\n\n------\n\n[Picasso Style](" + picassoImgUrl + ")" + \
                                   "\n\n[Dutch Golden Age Style](" + dutchImgUrl + ")" + \
                                   "\n\n[Mona Lisa Style](" + monaImgUrl + ")" + \

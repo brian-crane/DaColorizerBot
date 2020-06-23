@@ -27,5 +27,8 @@ video.release()
 clip = (VideoFileClip("out.avi"))
 clip.write_gif("out.gif")
 
-print("DONE!")
+for f in os.listdir(image_folder):
+    os.remove("animations/temp/"+f)
+
+print("files removed and we are DONE!")
 

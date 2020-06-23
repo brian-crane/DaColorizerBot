@@ -24,15 +24,26 @@ def isBlackListed(bL, str):
     if bL.find(str) != -1: return True
     return False
 
-def slugify(str):
-    str = str.replace(" ", "")
+def slugify(STR):
+    STR = STR.replace(" ", "")
     out = ""
     pattern = re.compile("[a-zA-Z0-9]")
-    for i in range(0, len(str) - 1):
-        if pattern.match(str[i:i + 1]):
-            out += str[i:i + 1]
-    if len(out) == 0: out = "as" + random.randint(1, 2222)
+    for i in range(0, len(STR) - 1):
+        if pattern.match(STR[i:i + 1]):
+            out += STR[i:i + 1]
+    if len(out) == 0: out = "as" + str(random.randint(1, 2222))
     return out[0:20]
+
+def slugifyNoLimit(STR):
+    STR = STR.replace(" ", "")
+    out = ""
+    pattern = re.compile("[a-zA-Z0-9]")
+    for i in range(0, len(STR) - 1):
+        if pattern.match(STR[i:i + 1]):
+            out += STR[i:i + 1]
+    if len(out) == 0: out = "as" + str(random.randint(1, 2222))
+    return out[0:100]
+
 
 
 def convertToJpeg(img):
